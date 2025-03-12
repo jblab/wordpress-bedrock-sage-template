@@ -1,0 +1,22 @@
+# IDE settings
+.idea/*
+!.idea/codeStyles/**/*
+
+# Local only files
+app/phpcs.xml
+/files/
+
+# Secrets
+/.env
+
+# Cache files
+.phplint-cache
+.phpcs-cache
+
+# OS Specifics
+Thumbs.db
+.DS_Store
+*Zone.Identifier
+
+# Tools vendors
+/tools/*/vendor/

@@ -1,0 +1,26 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# Note: This file is primarily used to simulate production locally; the values used in actual production may differ.
+#       Use it with `docker compose -f compose.yaml -f compose.production.yaml up -d --build`.
+# ----------------------------------------------------------------------------------------------------------------------
+services:
+  php:
+    build:
+      target: php_prod
+    environment:
+      APP_ENV: prod
+      SERVER_NAME: "https://local.julienbonnier.dev"
+      CADDY_GLOBAL_OPTIONS: |
+        https_port 4443
+        http_port 8080
+        skip_install_trust
+      CADDY_SERVER_EXTRA_DIRECTIVES: |
+        tls /etc/caddy/certs/server.crt /etc/caddy/certs/server.key
+    extra_hosts:
+      - "local.julienbonnier.dev:127.0.0.1"
+      - "local.julienbonnier.dev:::1"
+    tmpfs:
+      - /srv/app/var:uid=1000,gid=1000
+    volumes:
+      # If using TLS in prod this should probably be handled with a secret.
+      - ~/.tls/local-dev/server.crt:/etc/caddy/certs/server.crt:ro
+      - ~/.tls/local-dev/server.key:/etc/caddy/certs/server.key:ro

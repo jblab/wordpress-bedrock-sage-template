@@ -1,0 +1,55 @@
+services:
+  php:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: php_dev
+    hostname: php
+    networks:
+      - php
+      - db
+    ports:
+      - "80:8080"
+      - "443:4443"
+    environment:
+      APP_SECRET: Silence.Is.Golden.But.This.Is.No.Secret
+      DATABASE_PASSWORD: root
+      DATABASE_URL: postgresql://root:%db_password%@db:5432/app?serverVersion=13&charset=utf8
+    read_only: true
+    tmpfs:
+      - /tmp:uid=1000,gid=1000
+      - /data/caddy:uid=1000,gid=1000
+      - /config/caddy:uid=1000,gid=1000
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+  db:
+    image: mariadb:10.5
+    hostname: db
+    user: mysql
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -P 3306 -proot -uroot" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      MYSQL_DATABASE: wordpressdb
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    read_only: true
+    tmpfs:
+      - /var/run/mysqld
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  db_data:
+networks:
+  php:
+  db:
