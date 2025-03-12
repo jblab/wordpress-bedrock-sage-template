@@ -1,9 +1,17 @@
-ARG FRANKENPHP_VERSION=1.4-php8.3-bookworm
+ARG FRANKENPHP_VERSION=1.4-php8.4-bookworm
+ARG WORDPRESS_VERSION=6.7.1
+
+# ----------------------------------------------------------------------------------------------------------------------
+# WORDPRESS OFFICIAL IMAGE
+# ----------------------------------------------------------------------------------------------------------------------
+FROM wordpress:$WORDPRESS_VERSION AS wordpress_official
 
 # ----------------------------------------------------------------------------------------------------------------------
 # PHP BASE IMAGE
 # ----------------------------------------------------------------------------------------------------------------------
 FROM dunglas/frankenphp:$FRANKENPHP_VERSION AS php_base
+
+ARG WP_CLI_VERSION=2.11.0
 
 ENV COMPOSER_ALLOW_SUPERUSER=0
 ENV COMPOSER_HOME=/tmp
@@ -32,9 +40,22 @@ RUN install-php-extensions \
         @composer \
         apcu \
         mysqli \
-        opcache \
         zip \
-        intl
+        intl \
+        gd \
+        bcmath \
+        opcache \
+        exif \
+        imagick
+
+# get src recommneded config files
+COPY --from=wordpress_official ${PHP_INI_DIR}/conf.d/* ${PHP_INI_DIR}/conf.d/
+
+# WordPress CLI
+ENV PAGER=more
+RUN set -eu; \
+    curl -sfLo /usr/bin/wp https://github.com/wp-cli/wp-cli/releases/download/v${WP_CLI_VERSION}/wp-cli-${WP_CLI_VERSION}.phar; \
+    chmod +x /usr/bin/wp
 
 # fix problem when using `security_opt: ['no-new-privileges:true']`
 RUN setcap -r /usr/local/bin/frankenphp
@@ -75,7 +96,6 @@ RUN set -e; \
 # copy config files
 COPY .docker/.bashrc $APP_USER_HOME/.bashrc
 COPY .docker/php/xdebug.ini "${PHP_INI_DIR}/conf.d/docker-php-ext-xdebug.ini"
-COPY .docker/php/conf.d/symfony.dev.ini "${PHP_INI_DIR}/conf.d/symfony.ini"
 
 USER $APP_USER
 
@@ -101,7 +121,6 @@ ENV APP_ENV=prod
 
 # copy application and config files
 COPY --from=php_builder --chown="${APP_USER}:${APP_USER}" "$APP_HOME" "$APP_HOME"
-COPY .docker/php/conf.d/symfony.prod.ini "${PHP_INI_DIR}/conf.d/symfony.ini"
 
 USER $APP_USER
 # the working directory will be used as a base path for Caddy root directive

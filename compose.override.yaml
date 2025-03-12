@@ -12,7 +12,7 @@ services:
       - "local.julienbonnier.dev:127.0.0.1"
       - "local.julienbonnier.dev:::1"
     volumes:
-      - ./:/srv
+      - ./src:/srv/app
       - ~/.tls/local-dev/server.crt:/etc/caddy/certs/server.crt:ro
       - ~/.tls/local-dev/server.key:/etc/caddy/certs/server.key:ro
   php-cli:
@@ -27,16 +27,21 @@ services:
     healthcheck:
       test: exit 0
     volumes:
-      - ./:/srv
-      - ./tools:/opt/tools
+      - ./src:/srv/app
     networks:
       - php
       - db
     environment:
-      APP_SECRET: Silence.Is.Golden.But.This.Is.No.Secret
-      DATABASE_PASSWORD: root
-      DATABASE_URL: postgresql://root:%db_password%@db:5432/app?serverVersion=13&charset=utf8
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: wordpressdb
+      WP_ENV: development
+      WP_HOME: https://local.julienbonnier.dev
+      WP_SITEURL: https://local.julienbonnier.dev/wp
       # This is used for Xdebug step debugging with PHP CLI and should match the "Name" of the server used in
       # PhpStorm server configuration: Settings > PHP > Servers > Name.
       # Note: When configured, it will also be used when step debugging from a browser but is necessary only for CLI.
       PHP_IDE_CONFIG: serverName=local (docker)
+    env_file:
+      - src/.env

@@ -5,21 +5,28 @@ services:
       dockerfile: Dockerfile
       target: php_dev
     hostname: php
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: wordpressdb
+      WP_ENV: development
+      WP_HOME: https://local.julienbonnier.dev
+      WP_SITEURL: https://local.julienbonnier.dev/wp
+    env_file:
+      - src/.env
     networks:
       - php
       - db
     ports:
-      - "80:8080"
-      - "443:4443"
-    environment:
-      APP_SECRET: Silence.Is.Golden.But.This.Is.No.Secret
-      DATABASE_PASSWORD: root
-      DATABASE_URL: postgresql://root:%db_password%@db:5432/app?serverVersion=13&charset=utf8
+      - "${HTTP_PORT:-80}:8080"
+      - "${HTTPS_PORT:-443}:4443"
     read_only: true
     tmpfs:
       - /tmp:uid=1000,gid=1000
       - /data/caddy:uid=1000,gid=1000
       - /config/caddy:uid=1000,gid=1000
+      - /var/lib/php/sessions:uid=1000,gid=1000
     cap_drop:
       - ALL
     security_opt:
@@ -29,13 +36,15 @@ services:
     hostname: db
     user: mysql
     healthcheck:
-      test: [ "CMD-SHELL", "mysqladmin ping -P 3306 -proot -uroot" ]
+      test: ["CMD-SHELL", "mysqladmin ping -P 3306 -proot -uroot"]
       interval: 10s
       timeout: 5s
       retries: 5
     environment:
-      MYSQL_DATABASE: wordpressdb
-      MYSQL_ROOT_PASSWORD: root
+      MARIADB_DATABASE: wordpressdb
+      MARIADB_ROOT_PASSWORD: root
+    networks:
+      - db
     volumes:
       - db_data:/var/lib/mysql
     ports:
@@ -48,8 +57,19 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+  mailhog:
+    image: mailhog/mailhog
+    hostname: mailhog
+    user: root
+    networks:
+      - mailhog
+    environment:
+      - MH_SMTP_BIND_ADDR=0.0.0.0:25
+    ports:
+      - "${MAILHOG_PORT:-8025}:8025"
 volumes:
   db_data:
 networks:
   php:
   db:
+  mailhog:

@@ -7,7 +7,6 @@ services:
     build:
       target: php_prod
     environment:
-      APP_ENV: prod
       SERVER_NAME: "https://local.julienbonnier.dev"
       CADDY_GLOBAL_OPTIONS: |
         https_port 4443

@@ -1,6 +1,4 @@
 src/vendor/
-src/var/
-src/public/build/
 compose.*.yaml
 compose.yaml
 Dockerfile
