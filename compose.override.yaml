@@ -8,6 +8,14 @@ services:
         skip_install_trust
       CADDY_SERVER_EXTRA_DIRECTIVES: |
         tls /etc/caddy/certs/server.crt /etc/caddy/certs/server.key
+                
+        reverse_proxy /app/themes/sage/public/build/* http://vite:3000 {
+          flush_interval -1
+          header_down Cache-Control no-cache
+          header_down Pragma no-cache
+          header_up Upgrade {http.request.header.Upgrade}
+          header_up Connection {http.request.header.Connection}
+        }
     extra_hosts:
       - "local.julienbonnier.dev:127.0.0.1"
       - "local.julienbonnier.dev:::1"
@@ -45,3 +53,19 @@ services:
       PHP_IDE_CONFIG: serverName=local (docker)
     env_file:
       - src/.env
+  vite:
+    image: node:22-slim
+    environment:
+      APP_URL: https://local.julienbonnier.dev/
+      VITE_HMR_PROTOCOL: https
+      VITE_HMR_HOST: local.julienbonnier.dev
+      VITE_HMR_PORT: 443
+    networks:
+      - php
+    volumes:
+      - ./.docker/vite/entrypoint.sh:/bin/docker-entrypoint
+      - ./src/web/app/themes/sage:/app
+    user: node
+    working_dir: /app
+    entrypoint: ['bash', '-c', 'npm install && npx vite -c vite.config.dev.js']
+    stop_signal: SIGKILL
