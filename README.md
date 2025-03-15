@@ -27,15 +27,23 @@ PHP processing and web server functionality for seamless performance and deploym
 
 Follow these steps to install and set up the project:
 
-1. Start the project locally:
+1. Make sure you have a `.env` file in `src/`:
+   ```shell
+   cp src/.env.example src/.env
+   ```
+   or:
+   ```shell
+   touch src/.env
+   ```
+2. Start the project locally:
    ```shell
    docker compose up -d 
    ```
-2. Install Dependencies:
+3. Install Dependencies:
    ```shell
    docker compose exec php-cli composer install
    ```
-3. Install the theme's Dependencies:
+4. Install the theme's Dependencies:
    ```shell
    docker compose exec php-cli composer install --working-dir ./web/app/themes/sage
    ```
